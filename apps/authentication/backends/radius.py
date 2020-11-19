@@ -45,5 +45,13 @@ class RadiusBackend(CreateUserMixin, RADIUSBackend):
 
 
 class RadiusRealmBackend(CreateUserMixin, RADIUSRealmBackend):
+    def construct_full_username(self, username, realm):
+        return username
+
     def authenticate(self, request, username='', password='', realm=None, **kwargs):
-        return super().authenticate(request, username=username, password=password, realm=realm)
+        for _realm in settings.RADIUS_SERVERS.keys():
+            user = super().authenticate(request, username=username, password=password, realm=_realm)
+            if user:
+                return user
+
+        return None

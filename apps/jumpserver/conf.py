@@ -204,6 +204,7 @@ class Config(dict):
         'RADIUS_PORT': 1812,
         'RADIUS_SECRET': '',
         'RADIUS_ENCRYPT_PASSWORD': True,
+        'RADIUS_SERVERS': {},
         'OTP_IN_RADIUS': False,
 
         'AUTH_CAS': False,
@@ -457,6 +458,8 @@ class DynamicConfig:
             backends.insert(0, 'jms_oidc_rp.backends.OIDCAuthCodeBackend')
         if self.static_config.get('AUTH_RADIUS'):
             backends.insert(0, 'authentication.backends.radius.RadiusBackend')
+            if self.static_config.get('RADIUS_SERVERS'):
+                backends.insert(0, 'authentication.backends.radius.RadiusRealmBackend')
         if self.static_config.get('AUTH_SSO'):
             backends.insert(0, 'authentication.backends.api.SSOAuthentication')
         return backends
