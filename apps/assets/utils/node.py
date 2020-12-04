@@ -6,7 +6,7 @@ from django.db.models import Q
 
 from common.utils import get_logger, dict_get_any, is_uuid, get_object_or_none
 from common.http import is_true
-from .models import Asset, Node
+from assets.models import Asset, Node
 
 
 logger = get_logger(__file__)
