@@ -48,7 +48,7 @@ def create_or_update_qcloud_node():
 def create_or_update_vpc_node(vpc_name):
     """创建或更新VPC Node节点"""
     qcloud_node = create_or_update_qcloud_node()
-    return qcloud_node.get_or_create_child("vpc_name")[0]
+    return qcloud_node.get_or_create_child(vpc_name)[0]
 
 def create_or_update_vpc_subnet_node(vpc_name, subnet_name):
     """创建或更新VPC子网Node"""
@@ -62,7 +62,7 @@ def create_or_update_asset(cvm_instance):
     # 私网地址
     privateIpAddresse = cvm_instance.PrivateIpAddresses[0]
     # 公网IP
-    publicIpAddresse = cvm_instance.PublicIpAddresses[0] if len(cvm_instance.PublicIpAddresses) > 0 else ""
+    publicIpAddresse = cvm_instance.PublicIpAddresses[0] if cvm_instance.PublicIpAddresses is not None else ""
     # cvm 标签
     tags = cvm_instance.Tags
     # VPC ID
@@ -100,7 +100,7 @@ def create_or_update_asset(cvm_instance):
     subnet_node = create_or_update_vpc_subnet_node(vpcName, subnetName)
     logger.info("update asset node, asset ip: %s, node vpcname: %s, node subnetname: %s"
                 % (privateIpAddresse, vpcName, subnetName))
-    asset.nodes.set(subnet_node)
+    asset.nodes.set([subnet_node])
 
 
 @shared_task
