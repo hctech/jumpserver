@@ -87,7 +87,7 @@ def create_or_update_asset(cvm_instance):
             hostname = instanceName + "_" + privateIpAddresse
         else:
             hostname = instanceName
-        logger.info("create asset sync qcloud cvm, hostname: %s, ip: %s" % (hostname, ip))
+        logger.info("create asset sync qcloud cvm, hostname: %s, ip: %s" % (hostname, privateIpAddresse))
         asset = Asset.objects.create(ip=privateIpAddresse,
                                      hostname=hostname,
                                      admin_user=get_os_adminuser(osName),
