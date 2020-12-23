@@ -105,3 +105,4 @@ azure-mgmt-compute==4.6.2
 azure-mgmt-network==2.7.0
 msrestazure==0.6.4
 adal==1.2.5
+tencentcloud-sdk-python==3.0.40
