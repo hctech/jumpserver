@@ -134,3 +134,7 @@ REDIS_PORT: 6379
 QCLOUD:
   SecretId: ''
   SecretKey: ''
+
+# 服务器用户权限检测报告邮件接受人
+USER_PRIV_REPORT_TO_MAILS:
+  - 'example@example.com'
