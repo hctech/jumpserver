@@ -13,3 +13,4 @@ from .utils import *
 from .authbook import *
 from .gathered_user import *
 from .favorite_asset import *
+from .report import *

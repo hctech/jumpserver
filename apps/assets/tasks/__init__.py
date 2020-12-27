@@ -11,3 +11,4 @@ from .push_system_user import *
 from .system_user_connectivity import *
 from .nodes_amount import *
 from .asset_sync_qcloud import *
+from .privilege_report import *
