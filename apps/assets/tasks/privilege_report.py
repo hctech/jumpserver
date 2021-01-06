@@ -32,7 +32,7 @@ report_html = '''
 	<strong><span style="font-size:18px;">Dear all：</span><span style="font-size:18px;"></span></strong> 
 </div>
 <p style="font-family:&quot;font-size:16px;">
-	&nbsp; &nbsp;<span style="font-size:16px;"> 附件为 12月份服务器用户&amp;权限报表详情，与上次检查周期相比有变动的使用 “<span style="color:#E53333;">红色</span>“ 标记。</span> 
+	&nbsp; &nbsp;<span style="font-size:16px;"> 附件为 {check_month}月份服务器用户&amp;权限报表详情，与上次检查周期相比有变动的使用 “<span style="color:#E53333;">红色</span>“ 标记。</span> 
 </p>
 <p style="font-family:&quot;font-size:16px;">
 	<table style="width:100%;" cellpadding="2" cellspacing="0" border="1" bordercolor="#000000">
@@ -150,7 +150,8 @@ def gen_report(pre_report, current_report):
     mail_subject = "服务器用户权限%s月份检查报表" % (current_report.created.strftime("%m"))
     mail_from = settings.EMAIL_FROM or settings.EMAIL_HOST_USER
     mail_to = CONFIG.USER_PRIV_REPORT_TO_MAILS
-    mail_context = report_html.format(check_time=str(current_report.created),
+    mail_context = report_html.format(check_month=current_report.created.strftime("%m"),
+                                      check_time=str(current_report.created),
                                       check_status=current_status,
                                       check_host_nums=current_host_count,
                                       changed_host_nums=has_changed_count)
