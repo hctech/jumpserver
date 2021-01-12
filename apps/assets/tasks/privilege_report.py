@@ -19,6 +19,7 @@ import os
 import xlsxwriter
 from django.core.mail import EmailMessage
 from django.conf import settings
+import json
 
 logger = get_logger(__file__)
 
@@ -75,6 +76,30 @@ report_html = '''
 </p>
 '''
 
+#### 操作系统 sudo Cmnd ####
+## 操作系统上所有命令
+all_matrix = ["ALL"]
+## 操作系统上相关赋权命令
+permissions_matrix = ["/usr/sbin/visudo", "/bin/chown", "/bin/chmod", "/bin/chgrp"]
+## 操作系统上相关网络命令
+networking_matrix = ["/sbin/route", "/sbin/ifconfig", "/bin/ping", "/sbin/dhclient", "/usr/bin/net", "/sbin/iptables", "/usr/bin/rfcomm", "/usr/bin/wvdial", "/sbin/iwconfig", "/sbin/mii-tool"]
+## 操作系统上相关服务启停命令
+services_matrix = ["/sbin/service", "/sbin/chkconfig", "/usr/bin/systemctl start", "/usr/bin/systemctl stop", "/usr/bin/systemctl reload", "/usr/bin/systemctl restart", "/usr/bin/systemctl status", "/usr/bin/systemctl enable", "/usr/bin/systemctl disable"]
+## 操作系统上硬盘管理相关命令
+storage_matrix = ["/sbin/fdisk", "/sbin/sfdisk", "/sbin/parted", "/sbin/partprobe", "/bin/mount", "/bin/umount"]
+## 操作系统上进程管理相关命令
+processes_matrix = ["/bin/nice", "/bin/kill", "/usr/bin/kill", "/usr/bin/killall"]
+
+
+def has_a_matrix(matrix_list: list, sudo_cmmd: str):
+    """判断sudo command是否具有指定矩阵的权限
+    """
+    for cmmd in sudo_cmmd.split(','):
+        if cmmd.strip() in matrix_list:
+            return True
+    return False
+
+
 def gen_report(pre_report, current_report):
     """生成报表"""
     report_filename = os.path.join(REPORTDIR, current_report.created.strftime("%Y-%m-%d") + ".xlsx")
@@ -99,6 +124,56 @@ def gen_report(pre_report, current_report):
          'font_color': 'white'}))
     detail_worksheet.set_column('A:C', 30)
     detail_workbook_sheet_row = 1
+
+    # 用户权限矩阵说明
+    user_matrix_list_worksheet = wb.add_worksheet("用户权限矩阵说明")
+    user_matrix_list_worksheet.set_column('A:B', 30)
+    user_matrix_list_worksheet.write(0, 0, '权限', wb.add_format(
+        {'bold': True, 'align': "center", 'border': True, 'bg_color': '#3498DB',
+         'font_color': 'white'}))
+    user_matrix_list_worksheet.write(0, 1, '说明', wb.add_format(
+        {'bold': True, 'align': "center", 'border': True, 'bg_color': '#3498DB',
+         'font_color': 'white'}))
+    user_matrix_list_worksheet.write(1, 0, 'all_matrix')
+    user_matrix_list_worksheet.write(1, 1, '操作系统上所有命令')
+    user_matrix_list_worksheet.write(2, 0, 'permissions_matrix')
+    user_matrix_list_worksheet.write(2, 1, '操作系统上相关赋权命令(%s)' % " ".join(permissions_matrix))
+    user_matrix_list_worksheet.write(3, 0, 'networking_matrix')
+    user_matrix_list_worksheet.write(3, 1, '操作系统上相关网络命令(%s)' % " ".join(networking_matrix))
+    user_matrix_list_worksheet.write(4, 0, 'services_matrix')
+    user_matrix_list_worksheet.write(4, 1, '操作系统上相关服务启停命令(%s)' % " ".join(services_matrix))
+    user_matrix_list_worksheet.write(5, 0, 'storage_matrix')
+    user_matrix_list_worksheet.write(5, 1, '操作系统上硬盘管理相关命令(%s)' % " ".join(storage_matrix))
+    user_matrix_list_worksheet.write(6, 0, 'processes_matrix')
+    user_matrix_list_worksheet.write(6, 1, '操作系统上进程管理相关命令(%s)' % " ".join(processes_matrix))
+
+    # 用户权限矩阵sheet
+    user_matrix_worksheet = wb.add_worksheet("用户权限矩阵")
+    user_matrix_worksheet.write(0, 0, '主机名', wb.add_format(
+        {'bold': True, 'align': "center", 'border': True, 'bg_color': '#3498DB',
+         'font_color': 'white'}))
+    user_matrix_worksheet.write(0, 1, '用户名', wb.add_format(
+        {'bold': True, 'align': "center", 'border': True, 'bg_color': '#3498DB',
+         'font_color': 'white'}))
+    user_matrix_worksheet.write(0, 2, 'all_matrix', wb.add_format(
+        {'bold': True, 'align': "center", 'border': True, 'bg_color': '#3498DB',
+         'font_color': 'white'}))
+    user_matrix_worksheet.write(0, 3, 'permissions_matrix', wb.add_format(
+        {'bold': True, 'align': "center", 'border': True, 'bg_color': '#3498DB',
+         'font_color': 'white'}))
+    user_matrix_worksheet.write(0, 4, 'networking_matrix', wb.add_format(
+        {'bold': True, 'align': "center", 'border': True, 'bg_color': '#3498DB',
+         'font_color': 'white'}))
+    user_matrix_worksheet.write(0, 5, 'services_matrix', wb.add_format(
+        {'bold': True, 'align': "center", 'border': True, 'bg_color': '#3498DB',
+         'font_color': 'white'}))
+    user_matrix_worksheet.write(0, 6, 'storage_matrix', wb.add_format(
+        {'bold': True, 'align': "center", 'border': True, 'bg_color': '#3498DB',
+         'font_color': 'white'}))
+    user_matrix_worksheet.write(0, 7, 'processes_matrix', wb.add_format(
+        {'bold': True, 'align': "center", 'border': True, 'bg_color': '#3498DB',
+         'font_color': 'white'}))
+    user_matrix_worksheet_row = 1
 
 
     # 有用户或权限变动的主机数量
@@ -136,6 +211,63 @@ def gen_report(pre_report, current_report):
                 detail_worksheet.write(detail_workbook_sheet_row, 2, pre_run_stdout,
                                             wb.add_format({'border': True}))
             detail_workbook_sheet_row += 1
+
+            # 生成用户权限矩阵报告
+            try:
+                user_privilege_list = json.loads(current_run_stdout)
+            except json.decoder.JSONDecodeError:
+                user_privilege_list = []
+            for user_privilege in user_privilege_list:
+                for username, sudo_privilege in user_privilege.items():
+                    sudo_privilege_list = sudo_privilege.split(")NOPASSWD:")
+                    if len(sudo_privilege_list) == 1:
+                        sudo_privilege_list = sudo_privilege.split(")")
+                    sudo_command = sudo_privilege_list[-1]
+                    user_matrix_worksheet.write(user_matrix_worksheet_row, 0, hostname, wb.add_format({'border': True}))
+                    user_matrix_worksheet.write(user_matrix_worksheet_row, 1, username, wb.add_format({'border': True}))
+
+                    if has_a_matrix(all_matrix, sudo_command):
+                        user_matrix_worksheet.write(user_matrix_worksheet_row, 2, 'Y',
+                                                   wb.add_format({'border': True}))
+                    else:
+                        user_matrix_worksheet.write(user_matrix_worksheet_row, 2, 'N',
+                                                    wb.add_format({'border': True}))
+
+                    if has_a_matrix(permissions_matrix, sudo_command):
+                        user_matrix_worksheet.write(user_matrix_worksheet_row, 3, 'Y',
+                                                    wb.add_format({'border': True}))
+                    else:
+                        user_matrix_worksheet.write(user_matrix_worksheet_row, 3, 'N',
+                                                    wb.add_format({'border': True}))
+
+                    if has_a_matrix(networking_matrix, sudo_command):
+                        user_matrix_worksheet.write(user_matrix_worksheet_row, 4, 'Y',
+                                                    wb.add_format({'border': True}))
+                    else:
+                        user_matrix_worksheet.write(user_matrix_worksheet_row, 4, 'N',
+                                                    wb.add_format({'border': True}))
+
+                    if has_a_matrix(services_matrix, sudo_command):
+                        user_matrix_worksheet.write(user_matrix_worksheet_row, 5, 'Y',
+                                                    wb.add_format({'border': True}))
+                    else:
+                        user_matrix_worksheet.write(user_matrix_worksheet_row, 5, 'N',
+                                                    wb.add_format({'border': True}))
+
+                    if has_a_matrix(storage_matrix, sudo_command):
+                        user_matrix_worksheet.write(user_matrix_worksheet_row, 6, 'Y',
+                                                    wb.add_format({'border': True}))
+                    else:
+                        user_matrix_worksheet.write(user_matrix_worksheet_row, 6, 'N',
+                                                    wb.add_format({'border': True}))
+
+                    if has_a_matrix(processes_matrix, sudo_command):
+                        user_matrix_worksheet.write(user_matrix_worksheet_row, 7, 'Y',
+                                                    wb.add_format({'border': True}))
+                    else:
+                        user_matrix_worksheet.write(user_matrix_worksheet_row, 7, 'N',
+                                                    wb.add_format({'border': True}))
+                    user_matrix_worksheet_row += 1
 
     total_worksheet.write('A2', '检查时间', wb.add_format({'border': True}))
     total_worksheet.write('B2',  str(current_report.created), wb.add_format({'border': True}))
